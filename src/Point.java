@@ -62,7 +62,7 @@ public class Point implements Comparable<Point> {
         if (that.x == x && that.y == y) return -1.0/0.0;
         else if (that.y == y) return 0/1.0;
         else if (that.x == x) return 1.0/0.0;
-        else return (1.0*that.x-x)/(1.0*that.y-y);
+        else return (1.0*that.y-y)/(1.0*that.x-x);
     }
 
     /**
@@ -91,19 +91,18 @@ public class Point implements Comparable<Point> {
      * @return the Comparator that defines this ordering on points
      */
     public Comparator<Point> slopeOrder() {
-        return new PointComparator();
+        return new SlopeOrder();
     }
 
     //This class has a single method compare(q1, q2) that compares the slopes
     // that q1 and q2 make with the invoking object p. the slopeOrder() method
     // should create an instance of this nested class and return it
 
-    private class PointComparator implements Comparator<Point>{
+    private class SlopeOrder implements Comparator<Point>{
         @Override
         public int compare(Point o1, Point o2) {
-            double slope1 = slopeTo(o1);
-            double slope2 = slopeTo(o2);
-
+            double slope1 = Point.this.slopeTo(o1);
+            double slope2 = Point.this.slopeTo(o2);
             if (slope1 < slope2) return -1;
             else if (slope1 > slope2) return 1;
             else return 0;

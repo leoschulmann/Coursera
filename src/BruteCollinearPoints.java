@@ -11,20 +11,20 @@ import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class BruteCollinearPoints {
 
     private int numberOfSegments;
     private ArrayList<LineSegment> results = new ArrayList<>();
-    private ArrayList<Point> heads = new ArrayList<>();
-    private ArrayList<Point> tails = new ArrayList<>();
-
+    private ArrayList<Point> starts = new ArrayList<>();
+    private ArrayList<Point> ends = new ArrayList<>();
     public BruteCollinearPoints(Point[] points){
         if (points.length == 0) throw new NullPointerException("array zero length");
         Arrays.sort(points);
-            for (int i = 0; i < points.length; i++){
-                if (points[i] == null) throw new NullPointerException("array contains null element");
-                if (i > 0 && points[i].slopeTo(points[i-1])==Double.NEGATIVE_INFINITY) throw new IllegalArgumentException("array contains duplicate points!");
+        for (int i = 0; i < points.length; i++){
+            if (points[i] == null) throw new NullPointerException("array contains null element");
+            if (i > 0 && points[i].slopeTo(points[i-1])==Double.NEGATIVE_INFINITY) throw new IllegalArgumentException("array contains duplicate points!");
         }
 
         for (int p1 = 0; p1< points.length; p1++){
@@ -45,19 +45,23 @@ public class BruteCollinearPoints {
                         candidate[2] = points[p3];
                         candidate[3] = points[p4];
                         Arrays.sort(candidate);
-                        if ((heads.contains(candidate[0]) && tails.get(heads.indexOf(candidate[0])) == candidate[3]) ||
-                                (heads.contains(candidate[3]) && tails.get(heads.indexOf(candidate[0])) == candidate[0])) continue;
+                        if (isNonUnique(candidate[0],candidate[3])) continue;
                         results.add(new LineSegment(candidate[0], candidate[3]));
                         numberOfSegments++;
-                        heads.add(candidate[0]);
-                        tails.add(candidate[3]);
+                        starts.add(candidate[0]);
+                        ends.add(candidate[3]);
                     }
                 }
             }
         }
     }
 
-
+    private boolean isNonUnique(Point start, Point end){
+        if (starts.contains(start) && ends.contains(end) && starts.indexOf(start) == ends.indexOf(end)) return true;
+        else if (starts.contains(end) && ends.contains(start) && starts.indexOf(end) == ends.indexOf(start)) return
+                true;
+        else return false;
+    }
 
     // the number of line segments
     public int numberOfSegments(){
