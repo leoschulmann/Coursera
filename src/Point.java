@@ -59,10 +59,10 @@ public class Point implements Comparable<Point> {
      * @return the slope between this point and the specified point
      */
     public double slopeTo(Point that) {
-        if (that.x == x && that.y == y) return -1.0/0.0;
-        else if (that.y == y) return 0/1.0;
-        else if (that.x == x) return 1.0/0.0;
-        else return (1.0*that.y-y)/(1.0*that.x-x);
+        if (that.x == x && that.y == y) return -1.0 / 0.0;
+        else if (that.y == y) return 0 / 1.0;
+        else if (that.x == x) return 1.0 / 0.0;
+        else return (1.0 * that.y - y) / (1.0 * that.x - x);
     }
 
     /**
@@ -78,6 +78,7 @@ public class Point implements Comparable<Point> {
      *         argument point
      */
     public int compareTo(Point that) {
+        if (that == null) throw new NullPointerException("comparing to zero");
         if (this.y < that.y) return -1;
         else if (this.y == that.y && this.x < that.x) return -1;
         else if (this.y == that.y && this.x == that.x) return 0;
@@ -94,9 +95,6 @@ public class Point implements Comparable<Point> {
         return new SlopeOrder();
     }
 
-    //This class has a single method compare(q1, q2) that compares the slopes
-    // that q1 and q2 make with the invoking object p. the slopeOrder() method
-    // should create an instance of this nested class and return it
 
     private class SlopeOrder implements Comparator<Point>{
         @Override
