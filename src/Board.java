@@ -1,6 +1,9 @@
+import edu.princeton.cs.algs4.In;
+
 import java.util.ArrayList;
 
 import static edu.princeton.cs.algs4.StdRandom.uniform;
+
 
 public class Board {
     private int n = 0;
@@ -9,8 +12,11 @@ public class Board {
     // construct a board from an n-by-n array of blocks
     // (where blocks[i][j] = block in row i, column j)
     public Board(int[][] blocks) {
-        arr = blocks;
-        n = arr.length;
+        n = blocks.length;
+        arr = new int[n][n];
+        for (int i = 0; i < blocks.length; i++)
+            for (int j = 0; j <blocks.length; j++)
+                arr[i][j] = blocks[i][j];
     }
 
     // board dimension n
@@ -19,7 +25,7 @@ public class Board {
     }
 
     // number of blocks out of place
-    public int hamming(){
+    public int hamming() {
         int counter = 0;
         for (int row = 1; row <= n; row++) {
             for (int col = 1; col <= n; col++) {
@@ -33,14 +39,17 @@ public class Board {
     // sum of Manhattan distances between blocks and goal
     public int manhattan() {
         int counter = 0;
-        for (int row = 1; row <= n; row++){
-            for (int col = 1; col <= n; col++){
-                if  (row == n && col == n) continue;
-                if (arr[row - 1][col - 1] != (row - 1) * n + col) {
-                    int thisnumber = arr[row - 1][col - 1];
-                    if  (thisnumber % n == 0) counter += Math.abs((row - thisnumber/n) + (n - col));
-                    else counter += Math.abs((row - thisnumber/n + 1) + (n - col));
+        for (int row = 1; row <= n; row++) {
+            for (int col = 1; col <= n; col++) {
+                if (arr[row - 1][col - 1] == 0) continue;
+                int a = arr[row - 1][col - 1];
+                int aCol = a % n;
+                int aRow = (a / n) + 1;
+                if (aCol == 0) {
+                    aCol = n;
+                    aRow--;
                 }
+                counter += Math.abs(row - aRow) + Math.abs(col - aCol);
             }
         }
         return counter;
@@ -48,9 +57,9 @@ public class Board {
 
     // is this board the goal board?
     public boolean isGoal() {
-        for (int row = 1; row <= n; row++){
-            for (int col = 1; col <= n; col++){
-                if  (row == n && col == n) continue;
+        for (int row = 1; row <= n; row++) {
+            for (int col = 1; col <= n; col++) {
+                if (row == n && col == n) continue;
                 if (arr[row - 1][col - 1] != (row - 1) * n + col) return false;
             }
         }
@@ -59,21 +68,17 @@ public class Board {
 
     // a board that is obtained by exchanging any pair of blocks
     public Board twin() {
-        int[][] arraysEvilTwin = new int[n][n];
-//        for (int row = 1; row <= n; row++){
-//            for (int col = 1; col <= n; n++){
-//                arraysEvilTwin[row - 1][col - 1] = arr[row - 1][col - 1];
-//            }
-//        }
+        int[][] arraysEvilTwin = makeArrCopy();
+
         int col1 = 0;
         int col2 = 0;
         int row1 = 0;
         int row2 = 0;
         while (true) {
-            col1 = uniform (1, n + 1);
-            col2 = uniform (1, n + 1);
-            row1 = uniform (1, n + 1);
-            row2 = uniform (1, n + 1);
+            col1 = uniform(1, n + 1);
+            col2 = uniform(1, n + 1);
+            row1 = uniform(1, n + 1);
+            row2 = uniform(1, n + 1);
             if (arraysEvilTwin[row1 - 1][col1 - 1] == 0 || arraysEvilTwin[row2 - 1][col2 - 1] == 0) continue;
             if (col1 != col2 || row1 != row2) break;
         }
@@ -88,10 +93,10 @@ public class Board {
         if (y == this) return true;
         if (y == null) return false;
         if (this.getClass() != y.getClass()) return false;
-        Board that = (Board)y;
+        Board that = (Board) y;
         if (that.dimension() != this.dimension()) return false;
-        for (int row = 1; row <= n; row++){
-            for (int col = 1; col <= n;col++){
+        for (int row = 1; row <= n; row++) {
+            for (int col = 1; col <= n; col++) {
                 if (that.arr[row - 1][col - 1] != this.arr[row - 1][col - 1]) return false;
             }
         }
@@ -105,8 +110,13 @@ public class Board {
         int blankCol = 0;
         // поиск нуля
         for (int row = 1; row <= n; row++) {
-            for (int col = 1; col <= n; col++){
-                if (arr[row - 1][col - 1] == 0) blankCol = col; blankRow = row;
+            for (int col = 1; col <= n; col++) {
+                if (arr[row - 1][col - 1] == 0) {
+                    blankRow = row;
+                    blankCol = col;
+                    break;
+                }
+                if ((blankRow != 0 && blankCol != 0) && (arr[blankRow - 1][blankCol - 1] == 0)) break;
             }
         }       // максимум 4 варианта действий, минимум 2 (возвртный вариант убьет solver)
         if (blankRow != 1) neighbors.add(new Board(swtch(blankRow, blankCol, blankRow - 1, blankCol)));
@@ -119,11 +129,21 @@ public class Board {
 
     // служебный метод для обмена двух тайлов
     private int[][] swtch(int zeroRow, int zeroCol, int rowThat, int colThat) {
-        int[][] borda = arr.clone();
+        int[][] borda = makeArrCopy();
         int victim = borda[rowThat - 1][colThat - 1];
         borda[rowThat - 1][colThat - 1] = 0;
         borda[zeroRow - 1][zeroCol - 1] = victim;
         return borda;
+    }
+
+    private int[][] makeArrCopy() {
+        int[][] newborn = new int[n][n];
+        for (int row = 0; row < n; row++) {
+            for (int col = 0; col < n; col++) {
+                newborn[row][col] = arr[row][col];
+            }
+        }
+        return newborn;
     }
 
     // string representation of this board (in the output format specified below)
@@ -140,5 +160,6 @@ public class Board {
     }
 
     // unit tests (not graded)
-    public static void main(String[] args) {}
+    public static void main(String[] args) {
+    }
 }
