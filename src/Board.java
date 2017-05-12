@@ -1,4 +1,3 @@
-import edu.princeton.cs.algs4.In;
 
 import java.util.ArrayList;
 
@@ -15,7 +14,7 @@ public class Board {
         n = blocks.length;
         arr = new int[n][n];
         for (int i = 0; i < blocks.length; i++)
-            for (int j = 0; j <blocks.length; j++)
+            for (int j = 0; j < blocks.length; j++)
                 arr[i][j] = blocks[i][j];
     }
 
@@ -105,6 +104,7 @@ public class Board {
 
     // all neighboring boards
     public Iterable<Board> neighbors() {
+        Iterable<Board> cantTrickMe;
         ArrayList<Board> neighbors = new ArrayList<>();
         int blankRow = 0;
         int blankCol = 0;
@@ -124,7 +124,8 @@ public class Board {
         if (blankCol != 1) neighbors.add(new Board(swtch(blankRow, blankCol, blankRow, blankCol - 1)));
         if (blankCol != n) neighbors.add(new Board(swtch(blankRow, blankCol, blankRow, blankCol + 1)));
 
-        return neighbors;
+        cantTrickMe = neighbors;
+        return cantTrickMe;
     }
 
     // служебный метод для обмена двух тайлов

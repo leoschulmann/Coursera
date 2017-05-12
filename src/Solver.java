@@ -2,7 +2,6 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Stack;
 
@@ -45,12 +44,10 @@ public class Solver {
         twinBoard = initial.twin();
         pq.insert(new SearchNode(twinBoard, currentMove, null));
 
-        currentMove++;
 
         while (true) {
             SearchNode currentNode = pq.delMin();
             if (currentNode.board.isGoal()) {
-
                 finalStep = currentNode;
                 SearchNode o = currentNode;
                 while (true) {
@@ -64,10 +61,11 @@ public class Solver {
                         }
                     } else o = o.parent;
                 }
-            break;
-        }
-        currentMove = currentNode.moveWhenCreated + 1;
-        ArrayList<Board> boards = (ArrayList<Board>) currentNode.board.neighbors();
+                break;
+            }
+            currentMove++;
+            currentMove = currentNode.moveWhenCreated + 1;
+        Iterable<Board> boards = currentNode.board.neighbors();
         for (Board x : boards) {
             if (currentMove == 1) pq.insert(new SearchNode(x, currentMove, currentNode));
             else if (!x.equals(currentNode.parent.board)) {
