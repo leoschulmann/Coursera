@@ -7,7 +7,7 @@ import java.util.Stack;
 
 public class Solver {
     private int currentMove = 0;
-    private MinPQ<SearchNode> pq;
+//    private MinPQ<SearchNode> pq;
     private SearchNode finalStep = null;
     private Board twinBoard;
     private boolean isSolved = false;
@@ -17,29 +17,27 @@ public class Solver {
         private Board board;
         private int moveWhenCreated;
         private SearchNode parent;
+        private int priority;
 
         public SearchNode(Board board, int moveWhenCreated, SearchNode parent) {
             this.board = board;
             this.moveWhenCreated = moveWhenCreated;
             this.parent = parent;
+            this.priority = this.board.manhattan() + this.moveWhenCreated;
         }
 
         @Override
         public int compareTo(SearchNode that) {
-            int thisPriority = this.board.manhattan() + this.moveWhenCreated;
-            int thatPriority = that.board.manhattan() + that.moveWhenCreated;
-            if (thisPriority < thatPriority) return -1;
-            if (thisPriority == thatPriority && this.moveWhenCreated < that.moveWhenCreated) return -1;
+            if (this.priority < that.priority) return -1;
+            if (this.priority < that.priority && this.moveWhenCreated < that.moveWhenCreated) return -1;
             return 1;
         }
-
-//        }
     }
 
     // find a solution to the initial bo (using the A* algorithm)
     public Solver(Board initial) {
         if  (initial == null) throw new NullPointerException("null argument!");
-        pq = new MinPQ<SearchNode>();
+        MinPQ<SearchNode> pq = new MinPQ<>();
         pq.insert(new SearchNode(initial, currentMove, null));
         twinBoard = initial.twin();
         pq.insert(new SearchNode(twinBoard, currentMove, null));
@@ -65,15 +63,17 @@ public class Solver {
             }
             currentMove++;
             currentMove = currentNode.moveWhenCreated + 1;
-        Iterable<Board> boards = currentNode.board.neighbors();
-        for (Board x : boards) {
-            if (currentMove == 1) pq.insert(new SearchNode(x, currentMove, currentNode));
-            else if (!x.equals(currentNode.parent.board)) {
-                pq.insert(new SearchNode(x, currentMove, currentNode));
+            Iterable<Board> boards = currentNode.board.neighbors();
+            for (Board x : boards) {
+                // action for 1st move only
+                if (currentMove == 1) pq.insert(new SearchNode(x, currentMove, currentNode));
+                // other moves
+                else if (!x.equals(currentNode.parent.board)) {
+                    pq.insert(new SearchNode(x, currentMove, currentNode));
+                }
             }
         }
     }
-}
 
     // is the initial bo solvable?
     public boolean isSolvable() {

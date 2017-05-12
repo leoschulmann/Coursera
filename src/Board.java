@@ -1,8 +1,5 @@
-
 import java.util.ArrayList;
-
 import static edu.princeton.cs.algs4.StdRandom.uniform;
-
 
 public class Board {
     private int n = 0;
@@ -118,7 +115,7 @@ public class Board {
                 }
                 if ((blankRow != 0 && blankCol != 0) && (arr[blankRow - 1][blankCol - 1] == 0)) break;
             }
-        }       // максимум 4 варианта действий, минимум 2 (возвртный вариант убьет solver)
+        }
         if (blankRow != 1) neighbors.add(new Board(swtch(blankRow, blankCol, blankRow - 1, blankCol)));
         if (blankRow != n) neighbors.add(new Board(swtch(blankRow, blankCol, blankRow + 1, blankCol)));
         if (blankCol != 1) neighbors.add(new Board(swtch(blankRow, blankCol, blankRow, blankCol - 1)));
