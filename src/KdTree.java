@@ -12,36 +12,12 @@ public class KdTree {
         int size;
         boolean isVertical;
 
-        public Point2D getP() {
-            return p;
-        }
-
-        public void setP(Point2D p) {
-            this.p = p;
-        }
-
         public RectHV getRect() {
             return rect;
         }
 
         public void setRect(RectHV rect) {
             this.rect = rect;
-        }
-
-        public Node getLeftBottom() {
-            return leftBottom;
-        }
-
-        public void setLeftBottom(Node leftBottom) {
-            this.leftBottom = leftBottom;
-        }
-
-        public Node getRightTop() {
-            return rightTop;
-        }
-
-        public void setRightTop(Node rightTop) {
-            this.rightTop = rightTop;
         }
 
         public int getSize() {
@@ -73,67 +49,62 @@ public class KdTree {
     }
 
     public void insert(Point2D p) {
-//        if (root == null) {
-//            root = new Node();
-//            root.setP(p);
-//            root.setSize(1);
-//            root.setRect(new RectHV(0.0, 0.0, 1.0, 1.0));
-//        }
-        root = recursivePut(root, p, true);
+        root = recursivePut(root, p, true, new RectHV(0.0, 0.0, 1.0, 1.0));
     }
 
-    private Node recursivePut(Node node, Point2D p, boolean isVertical) {
+    private Node recursivePut(Node node, Point2D p, boolean isVertical, RectHV rect) {
         if (node == null) {
             node = new Node();
-            node.setP(p);
+            node.p = p;
             node.setVertical(isVertical);
             node.size = 1;
+            node.setRect(rect);
             return node;
         }
         else {
             if (node.isVertical) {          // if vertical, comparing .x coords
-                if (p.x() >= node.getP().x()) {
-                    node.setRightTop(recursivePut(node.getRightTop(), p, false));
+                if (p.x() >= node.p.x()) {
+                    RectHV newRect = new RectHV(node.p.x(), rect.ymin(), rect.xmax(), rect.ymax());
+                    node.rightTop = recursivePut(node.rightTop, p, false, newRect);
                 }
                 else  {
-                    node.setLeftBottom(recursivePut(node.getLeftBottom(), p, false));
+                    RectHV newRect = new RectHV(rect.xmin(), rect.ymin(), node.p.x(), rect.ymax());
+                    node.leftBottom = recursivePut(node.leftBottom, p, false, newRect);
                 }
             }
             else {
-                if (p.y() >= node.getP().y()) {
-                    node.setRightTop(recursivePut(node.getRightTop(), p, true));
+                if (p.y() >= node.p.y()) {
+                    RectHV newRect = new RectHV(rect.xmin(), node.p.y(), rect.xmax(), rect.ymax());
+                    node.rightTop = recursivePut(node.rightTop, p, true, newRect);
                 }
                 else {
-                    node.setLeftBottom(recursivePut(node.getLeftBottom(), p, true));
+                    RectHV newRect = new RectHV(rect.xmin(), rect.ymin(), rect.xmax(), node.p.y());
+                    node.leftBottom = recursivePut(node.leftBottom, p, true, newRect);
                 }
             }
         }
 
-        node.size = 1 + (node.getRightTop() != null ? node.getRightTop().size : 0) + (node.getLeftBottom() != null ? node.getLeftBottom().size : 0);
+        node.size = 1 + (node.rightTop != null ? node.rightTop.size : 0) + (node.leftBottom != null ? node.leftBottom.size : 0);
         return node;
     }
 
-//    public boolean contains(Point2D p)
-//
-//    public void draw()
-//
-//    public Iterable<Point2D> range(RectHV rect)
-//
-//    public Point2D nearest(Point2D p)
+    public boolean contains(Point2D p)
+
+    public void draw() {
+        recursiveDraw(root);
+    }
+
+    private void recursiveDraw (Node node) {
+        node.p.draw();
+        if (node.leftBottom != null) recursiveDraw(node.leftBottom);
+        if (node.rightTop != null)recursiveDraw(node.rightTop);
+    }
+
+
+    public Iterable<Point2D> range(RectHV rect)
+
+    public Point2D nearest(Point2D p)
 
     public static void main(String[] args) {
-        KdTree tree = new KdTree();
-        tree.insert(new Point2D(0.5, 0.5));
-        tree.insert(new Point2D(0.39, 0.41));
-        tree.insert(new Point2D(0.72, 0.12));
-        tree.insert(new Point2D(0.7, 0.98));
-
-        tree.insert(new Point2D(0.35, 0.17));
-        tree.insert(new Point2D(0.60, 0.35));
-        tree.insert(new Point2D(0.46, 0.25));
-
-        tree.insert(new Point2D(0.24, 0.18));
-
-        System.out.println("!");
     }
 }
