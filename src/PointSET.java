@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.SET;
 import java.util.ArrayList;
 
 public class PointSET {
-    SET <Point2D> set;
+    private SET <Point2D> set;
 
     // construct an empty set of points
     public PointSET() {
