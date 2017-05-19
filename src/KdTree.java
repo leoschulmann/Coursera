@@ -5,24 +5,31 @@ import java.util.ArrayList;
 
 public class KdTree {
     private Node root;
+    private ArrayList<Point2D> pts;
+    private Point2D ololo = null;
+    private Point2D localCandidate;
+    private double localCandidateSqDist;
 
     private static class Node {
         private Point2D p;
         private RectHV rect;
         private Node leftBottom;
         private Node rightTop;
-        int size;
-        boolean isVertical;
+        private int size;
+        private boolean isVertical;
     }
 
     public KdTree() {
     }
 
     public boolean isEmpty() {
-        return root.size == 0;
+        if (root == null) return true;
+        else return false;
+//        return root.size == 0;
     }
 
     public int size() {
+        if (root == null) return 0;
         return root.size;
     }
 
@@ -39,6 +46,11 @@ public class KdTree {
             node.rect = rect;
             return node;
         }
+
+        else if (node.p.equals(p)) {        // test for degeneracy
+            return node;
+        }
+
         else {
             if (node.isVertical) {          // if vertical, comparing .x coords
                 if (p.x() >= node.p.x()) {
@@ -69,10 +81,10 @@ public class KdTree {
 
     public boolean contains(Point2D p) {
         if (p == null) throw new NullPointerException();
-        return recursiveContains (root, p, true);
+        return recursiveContains(root, p, true);
     }
 
-    private boolean recursiveContains (Node node, Point2D p, boolean isVertical) {
+    private boolean recursiveContains(Node node, Point2D p, boolean isVertical) {
         if (node == null) return false;
         else if (node.p.equals(p)) return true;
 
@@ -96,13 +108,13 @@ public class KdTree {
         recursiveDraw(root);
     }
 
-    private void recursiveDraw (Node node) {
+    private void recursiveDraw(Node node) {
         node.p.draw();
         if (node.leftBottom != null) recursiveDraw(node.leftBottom);
         if (node.rightTop != null)recursiveDraw(node.rightTop);
     }
 
-/*Range search. To find all points contained in a given query rectangle,
+/* Range search. To find all points contained in a given query rectangle,
 start at the root and recursively search for points in both subtrees
 using the following pruning rule: if the query rectangle does not
 intersect the rectangle corresponding to a node, there is no need
@@ -117,8 +129,7 @@ if it might contain a point contained in the query rectangle.
         return pts;
     }
 
-    private ArrayList<Point2D> pts;
-    private Point2D ololo = null;
+
 
     private Point2D recursiveRange(Node node, RectHV rect) {
         if ((node.p.x() >= rect.xmin() && node.p.x() <= rect.xmax()) &&
@@ -137,7 +148,8 @@ if it might contain a point contained in the query rectangle.
 
     /* To find a closest point to a given query point, start at the root
     and recursively search in both subtrees using the following pruning rule:
-    if the closest point discovered so far is closer than the distance between the query point and the rectangle corresponding to a node, there is no need
+    if the closest point discovered so far is closer than the distance between the
+    query point and the rectangle corresponding to a node, there is no need
     to explore that node (or its subtrees). That is, a node is searched only if
     it might contain a point that is closer than the best one found so far. The
     effectiveness of the pruning rule depends on quickly finding a nearby point.
@@ -150,28 +162,26 @@ if it might contain a point contained in the query rectangle.
 
     public Point2D nearest(Point2D p) {
         if (p == null) throw  new NullPointerException();
+        if (isEmpty()) return null;
         Point2D cand;
         cand = recursiveNearest(root, p, true);
         return cand;
     }
 
-    private Point2D localCandidate;
-    private double localCandidateSqDist;
-
-    private Point2D recursiveNearest (Node node, Point2D p, boolean isVertical) {
-        if (node == root) {             //first-timers only
+    private Point2D recursiveNearest(Node node, Point2D p, boolean isVertical) { // boolean to delete
+        if (node == root) {             // first-timers only
             localCandidate = root.p;
             localCandidateSqDist = root.p.distanceSquaredTo(p);
         }
 
-        else if (node == null) return localCandidate;
+        else if (node == null) return localCandidate;       // exit node
 
         else if (node.p.distanceSquaredTo(p) < localCandidateSqDist) {
             localCandidate = node.p;
             localCandidateSqDist = node.p.distanceSquaredTo(p);
         }
 
-        if (isVertical) {
+        if (node.isVertical) {
             if (p.x() >= node.p.x() && localCandidateSqDist > node.rect.distanceSquaredTo(p)) {
                 localCandidate = recursiveNearest(node.rightTop, p, false);
             }
@@ -195,13 +205,22 @@ if it might contain a point contained in the query rectangle.
 
     public static void main(String[] args) {
         KdTree tree = new KdTree();
-        tree.insert(new Point2D(0.5, 0.5));
+        tree.insert(new Point2D(0.5, 0.5));     // root
+
         tree.insert(new Point2D(0.88, 0.88));
         tree.insert(new Point2D(0.90, 0.90));
         tree.insert(new Point2D(0.85, 0.90));
         tree.insert(new Point2D(0.82, 0.88));
         tree.insert(new Point2D(0.45, 0.95));
 
-        System.out.println(tree.nearest(new Point2D(0.88, 0.88)));
+        tree.insert(new Point2D(0.88, 0.88));       // duplicate
+        tree.insert(new Point2D(0.5, 0.5));        // duplicate
+        tree.insert(new Point2D(0.5, 0.5));         // duplicate
+        tree.insert(new Point2D(0.45, 0.95));       // duplicate
+        tree.insert(new Point2D(0.11, 0.11));
+
+        System.out.println(tree.size());
+        System.out.println("************");
+        System.out.println(tree.nearest(new Point2D(0, 0)));
     }
 }
