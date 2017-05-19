@@ -23,9 +23,7 @@ public class KdTree {
     }
 
     public boolean isEmpty() {
-        if (root == null) return true;
-        else return false;
-//        return root.size == 0;
+        return root == null;
     }
 
     public int size() {
@@ -34,16 +32,17 @@ public class KdTree {
     }
 
     public void insert(Point2D p) {
-        root = recursivePut(root, p, true, new RectHV(0.0, 0.0, 1.0, 1.0));
+        root = recursivePut(root, p, true, 0, 0, 1, 1);
     }
 
-    private Node recursivePut(Node node, Point2D p, boolean isVertical, RectHV rect) {
+    private Node recursivePut(Node node, Point2D p, boolean isVertical, double x0, double y0, double x1, double y1) {
         if (node == null) {
             node = new Node();
             node.p = p;
             node.isVertical = isVertical;
             node.size = 1;
-            node.rect = rect;
+//            node.rect = rect;
+            node.rect = new RectHV(x0, y0, x1, y1);
             return node;
         }
 
@@ -54,22 +53,18 @@ public class KdTree {
         else {
             if (node.isVertical) {          // if vertical, comparing .x coords
                 if (p.x() >= node.p.x()) {
-                    RectHV newRect = new RectHV(node.p.x(), rect.ymin(), rect.xmax(), rect.ymax());
-                    node.rightTop = recursivePut(node.rightTop, p, false, newRect);
+                    node.rightTop = recursivePut(node.rightTop, p, false, node.p.x(), y0, x1, y1);
                 }
                 else  {
-                    RectHV newRect = new RectHV(rect.xmin(), rect.ymin(), node.p.x(), rect.ymax());
-                    node.leftBottom = recursivePut(node.leftBottom, p, false, newRect);
+                    node.leftBottom = recursivePut(node.leftBottom, p, false, x0, y0, node.p.x(), y1);
                 }
             }
             else {
                 if (p.y() >= node.p.y()) {
-                    RectHV newRect = new RectHV(rect.xmin(), node.p.y(), rect.xmax(), rect.ymax());
-                    node.rightTop = recursivePut(node.rightTop, p, true, newRect);
+                    node.rightTop = recursivePut(node.rightTop, p, true, x0, node.p.y(), x1, y1);
                 }
                 else {
-                    RectHV newRect = new RectHV(rect.xmin(), rect.ymin(), rect.xmax(), node.p.y());
-                    node.leftBottom = recursivePut(node.leftBottom, p, true, newRect);
+                    node.leftBottom = recursivePut(node.leftBottom, p, true, x0, y0, x1, node.p.y());
                 }
             }
         }
@@ -81,25 +76,25 @@ public class KdTree {
 
     public boolean contains(Point2D p) {
         if (p == null) throw new NullPointerException();
-        return recursiveContains(root, p, true);
+        return recursiveContains(root, p);
     }
 
-    private boolean recursiveContains(Node node, Point2D p, boolean isVertical) {
+    private boolean recursiveContains(Node node, Point2D p) {
         if (node == null) return false;
         else if (node.p.equals(p)) return true;
 
         else {
             if  (node.isVertical) {
                 if (p.x() >= node.p.x()) {
-                    return recursiveContains(node.rightTop, p, false);
+                    return recursiveContains(node.rightTop, p);
                 }
-                else return recursiveContains(node.leftBottom, p, false);
+                else return recursiveContains(node.leftBottom, p);
             }
             else {
                 if (p.y() >= node.p.y()) {
-                    return recursiveContains(node.rightTop, p, true);
+                    return recursiveContains(node.rightTop, p);
                 }
-                else return recursiveContains(node.leftBottom, p, true);
+                else return recursiveContains(node.leftBottom, p);
             }
         }
     }
@@ -114,22 +109,12 @@ public class KdTree {
         if (node.rightTop != null)recursiveDraw(node.rightTop);
     }
 
-/* Range search. To find all points contained in a given query rectangle,
-start at the root and recursively search for points in both subtrees
-using the following pruning rule: if the query rectangle does not
-intersect the rectangle corresponding to a node, there is no need
-to explore that node (or its subtrees). A subtree is searched only
-if it might contain a point contained in the query rectangle.
- */
-
     public Iterable<Point2D> range(RectHV rect) {
         if (rect == null) throw  new NullPointerException();
         pts = new ArrayList<>();
         recursiveRange(root, rect);
         return pts;
     }
-
-
 
     private Point2D recursiveRange(Node node, RectHV rect) {
         if ((node.p.x() >= rect.xmin() && node.p.x() <= rect.xmax()) &&
@@ -146,29 +131,15 @@ if it might contain a point contained in the query rectangle.
         return null;
     }
 
-    /* To find a closest point to a given query point, start at the root
-    and recursively search in both subtrees using the following pruning rule:
-    if the closest point discovered so far is closer than the distance between the
-    query point and the rectangle corresponding to a node, there is no need
-    to explore that node (or its subtrees). That is, a node is searched only if
-    it might contain a point that is closer than the best one found so far. The
-    effectiveness of the pruning rule depends on quickly finding a nearby point.
-    To do this, organize your recursive method so that when there are two possible
-    subtrees to go down, you always choose the subtree that is on the same side
-    of the splitting line as the query point as the first subtree to explore—
-    the closest point found while exploring the first subtree may enable pruning
-    of the second subtree.
-     */
-
     public Point2D nearest(Point2D p) {
         if (p == null) throw  new NullPointerException();
         if (isEmpty()) return null;
         Point2D cand;
-        cand = recursiveNearest(root, p, true);
+        cand = recursiveNearest(root, p);
         return cand;
     }
 
-    private Point2D recursiveNearest(Node node, Point2D p, boolean isVertical) { // boolean to delete
+    private Point2D recursiveNearest(Node node, Point2D p) {
         if (node == root) {             // first-timers only
             localCandidate = root.p;
             localCandidateSqDist = root.p.distanceSquaredTo(p);
@@ -180,47 +151,36 @@ if it might contain a point contained in the query rectangle.
             localCandidate = node.p;
             localCandidateSqDist = node.p.distanceSquaredTo(p);
         }
-
-        if (node.isVertical) {
-            if (p.x() >= node.p.x() && localCandidateSqDist > node.rect.distanceSquaredTo(p)) {
-                localCandidate = recursiveNearest(node.rightTop, p, false);
-            }
-            else if (p.x() <= node.p.x() && localCandidateSqDist > node.rect.distanceSquaredTo(p)) {
-                localCandidate = recursiveNearest(node.leftBottom, p, false);
+        if  (node.isVertical) {
+            if (p.x() >= node.p.x()) {
+                localCandidate = recursiveNearest(node.rightTop, p);
+                if (node.leftBottom != null && node.leftBottom.rect.distanceSquaredTo(p) < localCandidateSqDist) {
+                    localCandidate = recursiveNearest(node.leftBottom, p);
+                }
+            } else if (p.x() < node.p.x()) {
+                localCandidate = recursiveNearest(node.leftBottom, p);
+                if (node.rightTop != null && node.rightTop.rect.distanceSquaredTo(p) < localCandidateSqDist) {
+                    localCandidate = recursiveNearest(node.rightTop, p);
+                }
             }
         }
-        else {
-            if (p.y() >= node.p.y() && localCandidateSqDist > node.rect.distanceSquaredTo(p)) {
-                localCandidate = recursiveNearest(node.rightTop, p, true);
+        else  {
+            if (p.y() >= node.p.y()) {
+                localCandidate = recursiveNearest(node.rightTop, p);
+                if (node.leftBottom != null && node.leftBottom.rect.distanceSquaredTo(p) < localCandidateSqDist) {
+                    localCandidate = recursiveNearest(node.leftBottom, p);
+                }
             }
-            else if (p.y() <= node.p.y() && localCandidateSqDist > node.rect.distanceSquaredTo(p)) {
-                localCandidate = recursiveNearest(node.leftBottom, p, true);
+            else if (p.y() < node.p.y()) {
+                localCandidate = recursiveNearest(node.leftBottom, p);
+                if (node.rightTop != null && node.rightTop.rect.distanceSquaredTo(p) < localCandidateSqDist) {
+                    localCandidate = recursiveNearest(node.rightTop, p);
+                }
             }
         }
         return localCandidate;
     }
 
-
-
-
     public static void main(String[] args) {
-        KdTree tree = new KdTree();
-        tree.insert(new Point2D(0.5, 0.5));     // root
-
-        tree.insert(new Point2D(0.88, 0.88));
-        tree.insert(new Point2D(0.90, 0.90));
-        tree.insert(new Point2D(0.85, 0.90));
-        tree.insert(new Point2D(0.82, 0.88));
-        tree.insert(new Point2D(0.45, 0.95));
-
-        tree.insert(new Point2D(0.88, 0.88));       // duplicate
-        tree.insert(new Point2D(0.5, 0.5));        // duplicate
-        tree.insert(new Point2D(0.5, 0.5));         // duplicate
-        tree.insert(new Point2D(0.45, 0.95));       // duplicate
-        tree.insert(new Point2D(0.11, 0.11));
-
-        System.out.println(tree.size());
-        System.out.println("************");
-        System.out.println(tree.nearest(new Point2D(0, 0)));
     }
 }

@@ -7,25 +7,21 @@ import java.util.ArrayList;
 public class PointSET {
     private SET<Point2D> set;
 
-    // construct an empty set of points
     public PointSET() {
         set = new SET<>();
     }
 
-    // is the set empty?
     public boolean isEmpty() {
         return size() == 0;
     }
 
-    // number of points in the set
     public int size() {
         return set.size();
     }
 
-    // add the point to the set (if it is not already in the set)
     public void insert(Point2D p) {
         if (p == null) throw new NullPointerException();
-            set.add(p);
+        set.add(p);
     }
 
     public boolean contains(Point2D p) {
@@ -38,7 +34,6 @@ public class PointSET {
         }
     }
 
-    // all points that are inside the rectangle
     public Iterable<Point2D> range(RectHV rect) {
         if (rect == null) throw new NullPointerException();
         ArrayList<Point2D> arr = new ArrayList<>();
@@ -46,21 +41,20 @@ public class PointSET {
         return arr;
     }
 
-    // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(Point2D p) {
         if (p == null) throw new NullPointerException();
         Point2D cand = null;
         for (Point2D x : set) {
-                if (cand == null) {
-                    cand = x;
-                }
-                else {
-                    if (x.distanceSquaredTo(p) < cand.distanceSquaredTo(p)) cand = x;
-                }
+            if (cand == null) {
+                cand = x;
             }
+            else {
+                if (x.distanceSquaredTo(p) < cand.distanceSquaredTo(p)) cand = x;
+            }
+        }
         return cand;
     }
 
-//    public static void main(String[] args)
-// unit testing of the methods (optional)
+    public static void main(String[] args) {}
+
 }
